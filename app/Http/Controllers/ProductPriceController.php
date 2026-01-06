@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\ProductPrice;
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreProductPriceRequest;
 use Illuminate\Http\JsonResponse;
 
 class ProductPriceController extends Controller
@@ -33,25 +33,51 @@ class ProductPriceController extends Controller
     /**
      * Store a newly created product price in storage.
      */
-    public function store(Request $request, string $productId): JsonResponse
+    public function store(StoreProductPriceRequest $request, string $productId): JsonResponse
     {
         $product = Product::findOrFail($productId);
         
-        $validated = $request->validate([
-            'currency_id' => 'required|exists:currencies,id',
-            'price' => 'required|numeric|min:0|max:99999999.99',
-        ]);
-        
-        $validated['product_id'] = $product->id;
-        
-        $productPrice = ProductPrice::create($validated);
+        $productPrice = ProductPrice::updateOrCreate(
+            [
+                'product_id' => $product->id,
+                'currency_id' => $request->validated()['currency_id']
+            ],
+            [
+                'price' => $request->validated()['price']
+            ]
+        );
         
         $productPrice->load('currency');
         
+        $wasRecentlyCreated = $productPrice->wasRecentlyCreated;
+        
         return response()->json([
             'success' => true,
-            'message' => 'Precio creado exitosamente',
+            'message' => $wasRecentlyCreated ? 'Precio creado exitosamente' : 'Precio actualizado exitosamente',
             'data' => $productPrice
-        ], 201);
+        ], $wasRecentlyCreated ? 201 : 200);
+    }
+
+    /**
+     * Remove the specified product price from storage.
+     */
+    public function destroy(string $productId, ProductPrice $price): JsonResponse
+    {
+        $product = Product::findOrFail($productId);
+
+        if ($price->product_id !== $product->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Recurso no encontrado',
+                'error' => 'El precio no pertenece a este producto'
+            ], 404);
+        }
+
+        $price->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Precio eliminado exitosamente'
+        ]);
     }
 }

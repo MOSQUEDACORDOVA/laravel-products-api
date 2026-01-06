@@ -3,7 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreProductRequest;
+use App\Http\Requests\UpdateProductRequest;
 use Illuminate\Http\JsonResponse;
 
 class ProductController extends Controller
@@ -13,40 +14,37 @@ class ProductController extends Controller
      */
     public function index(): JsonResponse
     {
-        $products = Product::all();
+        $perPage = min((int) request()->get('per_page', 10), 100);
+        
+        $products = Product::with('currency')
+            ->orderByDesc('id')
+            ->paginate($perPage);
+
         return response()->json([
             'success' => true,
-            'data' => $products
+            'data' => $products->items(),
+            'pagination' => [
+                'total' => $products->total(),
+                'per_page' => $products->perPage(),
+                'current_page' => $products->currentPage(),
+                'last_page' => $products->lastPage(),
+                'from' => $products->firstItem(),
+                'to' => $products->lastItem(),
+            ]
         ]);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): JsonResponse
+    public function store(StoreProductRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
-            'currency_id' => 'required|integer|min:1',
-            'tax_cost' => 'required|numeric|min:0',
-            'manufacturing_cost' => 'required|numeric|min:0',
-        ], [
-            'name.required' => 'El nombre del producto es obligatorio',
-            'price.required' => 'El precio es obligatorio',
-            'price.min' => 'El precio debe ser mayor o igual a 0',
-            'currency_id.required' => 'El ID de divisa es obligatorio',
-            'tax_cost.required' => 'El costo de impuesto es obligatorio',
-            'manufacturing_cost.required' => 'El costo de fabricación es obligatorio',
-        ]);
-
-        $product = Product::create($validated);
+        $product = Product::create($request->validated());
 
         return response()->json([
             'success' => true,
             'message' => 'Producto creado exitosamente',
-            'data' => $product
+            'data' => $product->load('currency')
         ], 201);
     }
 
@@ -57,30 +55,21 @@ class ProductController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data' => $product
+            'data' => $product->load('currency')
         ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Product $product): JsonResponse
+    public function update(UpdateProductRequest $request, Product $product): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'description' => 'nullable|string',
-            'price' => 'sometimes|numeric|min:0',
-            'currency_id' => 'sometimes|integer|min:1',
-            'tax_cost' => 'sometimes|numeric|min:0',
-            'manufacturing_cost' => 'sometimes|numeric|min:0',
-        ]);
-
-        $product->update($validated);
+        $product->update($request->validated());
 
         return response()->json([
             'success' => true,
             'message' => 'Producto actualizado exitosamente',
-            'data' => $product
+            'data' => $product->fresh()->load('currency')
         ]);
     }
 

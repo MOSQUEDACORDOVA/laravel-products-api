@@ -6,8 +6,7 @@ use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 
-// Rutas públicas de autenticación
-Route::post('register', [AuthController::class, 'register'])->name('register');
+// Ruta pública de autenticación
 Route::post('login', [AuthController::class, 'login'])->name('login');
 
 // Rutas protegidas con autenticación

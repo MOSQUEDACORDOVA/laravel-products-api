@@ -5,6 +5,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Auth\AuthenticationException;
@@ -41,6 +42,16 @@ return Application::configure(basePath: dirname(__DIR__))
                     'message' => 'Ruta no encontrada',
                     'error' => 'La ruta solicitada no existe'
                 ], 404);
+            }
+        });
+
+        $exceptions->render(function (MethodNotAllowedHttpException $e, $request) {
+            if ($request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Método no permitido',
+                    'error' => 'Usa el método HTTP correcto para este endpoint'
+                ], 405);
             }
         });
 

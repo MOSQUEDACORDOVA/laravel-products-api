@@ -66,9 +66,10 @@ API RESTful desarrollada en **Laravel 12** para la gestión completa de producto
 
 ### Tablas
 
+#### 📦 Tabla: Products
+
 | Campo | Tipo | Descripción |
 |-------|------|-------------|
-| **products** | | |
 | id | integer | Identificador único |
 | name | string | Nombre del producto |
 | description | text | Descripción (opcional) |
@@ -76,18 +77,30 @@ API RESTful desarrollada en **Laravel 12** para la gestión completa de producto
 | currency_id | integer | FK a currencies |
 | tax_cost | decimal(10,2) | Costo de impuestos |
 | manufacturing_cost | decimal(10,2) | Costo de fabricación |
+| created_at | timestamp | Fecha de creación |
+| updated_at | timestamp | Fecha de actualización |
 
-| **currencies** | | |
+#### 💱 Tabla: Currencies
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
 | id | integer | Identificador único |
 | name | string | Nombre (ej: "US Dollar") |
 | symbol | string | Símbolo (ej: "USD") |
 | exchange_rate | decimal(10,4) | Tasa de cambio |
+| created_at | timestamp | Fecha de creación |
+| updated_at | timestamp | Fecha de actualización |
 
-| **product_prices** | | |
+#### 💰 Tabla: Product Prices
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
 | id | integer | Identificador único |
-| product_id | integer | FK a products |
-| currency_id | integer | FK a currencies |
+| product_id | integer | FK a products (cascada) |
+| currency_id | integer | FK a currencies (cascada) |
 | price | decimal(10,2) | Precio en divisa específica |
+| created_at | timestamp | Fecha de creación |
+| updated_at | timestamp | Fecha de actualización |
 
 ---
 
